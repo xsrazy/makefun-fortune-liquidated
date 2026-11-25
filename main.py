@@ -56,6 +56,16 @@ are" is oracular and formal, the voice of the cookie itself, and
 "Spend them wisely" keeps that voice while quietly breaking it, since
 there is nothing to spend.
 
+Why the zeros work, and why no other number would: a fortune cookie
+promises luck in digits, so a list of lucky numbers is the one place
+where a zero balance can hide in plain sight. Four zeros say the
+account is empty without ever saying "empty", and the word "wisely"
+turns the nothing into a joke the trader can carry: the cookie is
+still on his side, handing him advice for money he no longer has.
+The line also survives the tie-break the rules publish, smaller text
+wins an exact tie on Judge win rate, and at 65 characters it is
+shorter than most entries while still reading whole.
+
 The entry text itself is one fixed line (see ENTRY below). The program
 writes it to ``entry.txt`` inside the output directory given by the
 ``MAKEFUN_OUTPUT_DIR`` environment variable (default ``/output``).
@@ -83,6 +93,11 @@ def entry_text() -> str:
     return ENTRY
 
 
+def word_count(text: str) -> int:
+    """Count the words in the entry, splitting on whitespace."""
+    return len(text.split())
+
+
 def validate(text: str) -> None:
     """Check the entry against the sealed gate; raise ValueError if bad.
 
@@ -98,12 +113,14 @@ def validate(text: str) -> None:
         raise ValueError(
             f"entry is {len(text)} characters, over the {MAX_CHARS} limit"
         )
-    if len(text.split()) > MAX_WORDS:
+    if word_count(text) > MAX_WORDS:
         raise ValueError(
-            f"entry is {len(text.split())} words, over the {MAX_WORDS} limit"
+            f"entry is {word_count(text)} words, over the {MAX_WORDS} limit"
         )
     if "\n" in text or "\r" in text:
         raise ValueError("entry must be a single line, no newlines allowed")
+    if text != text.strip():
+        raise ValueError("entry must not start or end with whitespace")
     text.encode("utf-8")  # raises UnicodeEncodeError if not encodable
     if any(ord(ch) > 127 for ch in text):
         raise ValueError("entry must be plain ASCII, no emoji or odd characters")
@@ -127,7 +144,7 @@ def describe(text: str) -> dict:
     """Return simple stats about the entry text."""
     return {
         "chars": len(text),
-        "words": len(text.split()),
+        "words": word_count(text),
         "bytes": len(text.encode("utf-8")),
         "lines": len(text.split("\n")),
         "max_chars": MAX_CHARS,
